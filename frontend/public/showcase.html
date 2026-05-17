@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResumeIQ — AI Resume Intelligence Platform</title>
+<meta name="description" content="Enterprise-grade AI resume parsing platform. LLM extraction, company normalization, skills taxonomy mapping, and education scoring at scale.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & tokens ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#08090d;--ink2:#0f111a;--ink3:#161b29;--ink4:#1e2538;--ink5:#262e42;
+  --line:rgba(255,255,255,0.06);--line2:rgba(255,255,255,0.10);--line3:rgba(255,255,255,0.16);
+  --muted:#4e5a7a;--dim:#6b7899;--soft:#9ba8c4;--text:#d8e0f0;--bright:#eef2ff;
+  --gold:#e8c547;--gold2:#f0d060;--gold3:#c8a020;
+  --gold-glow:rgba(232,197,71,0.15);
+  --teal:#2dd4bf;--teal2:#14b8a6;
+  --blue:#60a5fa;--blue2:#3b82f6;
+  --violet:#a78bfa;--violet2:#8b5cf6;
+  --rose:#fb7185;
+  --green:#4ade80;
+  --r:12px;--r-sm:7px;--r-lg:18px;--r-xl:24px;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--ink);color:var(--text);
+  font-size:15px;line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ── Noise texture overlay ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:0.5;
+}
+
+/* ── Glow orbs ── */
+.orb{
+  position:fixed;border-radius:50%;
+  filter:blur(120px);pointer-events:none;z-index:0;
+}
+.orb1{width:600px;height:600px;background:rgba(139,92,246,0.08);top:-200px;right:-150px}
+.orb2{width:500px;height:500px;background:rgba(232,197,71,0.06);bottom:-100px;left:-100px}
+.orb3{width:400px;height:400px;background:rgba(45,212,191,0.05);top:40%;left:30%}
+
+/* ── Nav ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 40px;
+  background:rgba(8,9,13,0.7);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--line);
+}
+.nav-logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:20px;
+  color:var(--bright);letter-spacing:-0.5px;
+  display:flex;align-items:center;gap:10px;
+}
+.nav-mark{
+  width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,var(--gold),var(--gold3));
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:#0d0a00;
+}
+.nav-links{display:flex;align-items:center;gap:6px}
+.nav-link{
+  padding:6px 14px;font-size:13px;font-weight:500;
+  color:var(--dim);border-radius:var(--r-sm);
+  text-decoration:none;transition:all 0.15s;cursor:pointer;
+  border:none;background:none;
+}
+.nav-link:hover{color:var(--text);background:var(--line2)}
+.nav-cta{
+  padding:8px 18px;font-size:13px;font-weight:600;
+  color:#0d0a00;background:var(--gold);
+  border-radius:var(--r-sm);text-decoration:none;
+  transition:all 0.2s;font-family:'Syne',sans-serif;
+}
+.nav-cta:hover{background:var(--gold2);transform:translateY(-1px)}
+
+/* ── Sections ── */
+section{position:relative;z-index:1}
+.container{max-width:1080px;margin:0 auto;padding:0 40px}
+
+/* ── Hero ── */
+.hero{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;
+  padding:120px 40px 80px;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 14px;
+  background:var(--line2);
+  border:1px solid var(--line3);
+  border-radius:20px;
+  font-size:12px;font-weight:500;
+  color:var(--soft);letter-spacing:0.5px;
+  margin-bottom:28px;
+  text-transform:uppercase;
+}
+.live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 8px rgba(74,222,128,0.8);
+  animation:pulse 2s ease infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+.hero-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(48px,7vw,84px);
+  font-weight:800;
+  line-height:1.0;
+  letter-spacing:-3px;
+  color:var(--bright);
+  margin-bottom:8px;
+}
+.hero-title .accent{
+  background:linear-gradient(135deg,var(--gold) 0%,var(--gold2) 50%,var(--teal) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero-subtitle{
+  font-size:clamp(16px,2vw,20px);
+  color:var(--dim);font-weight:400;
+  max-width:580px;
+  margin:20px auto 40px;
+  line-height:1.7;
+}
+.hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:60px}
+.btn-primary{
+  padding:14px 28px;
+  background:var(--gold);color:#0d0a00;
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+  border-radius:var(--r);border:none;cursor:pointer;
+  transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;
+  box-shadow:0 4px 24px rgba(232,197,71,0.3);
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(232,197,71,0.4);background:var(--gold2)}
+.btn-ghost{
+  padding:14px 28px;
+  background:transparent;color:var(--text);
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:600;
+  border-radius:var(--r);border:1px solid var(--line3);
+  cursor:pointer;transition:all 0.2s;text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.btn-ghost:hover{background:var(--line2);border-color:var(--line3);transform:translateY(-1px)}
+
+/* Hero stats bar */
+.stats-bar{
+  display:flex;align-items:center;justify-content:center;gap:0;
+  background:var(--ink2);
+  border:1px solid var(--line2);
+  border-radius:var(--r-lg);
+  overflow:hidden;
+  max-width:680px;width:100%;
+}
+.stat-item{
+  flex:1;padding:20px;text-align:center;
+  border-right:1px solid var(--line2);
+}
+.stat-item:last-child{border-right:none}
+.stat-val{
+  font-family:'Syne',sans-serif;
+  font-size:28px;font-weight:800;
+  letter-spacing:-1px;color:var(--bright);
+  line-height:1;
+}
+.stat-val .unit{font-size:16px;font-weight:600;color:var(--dim)}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:0.5px}
+
+/* ── Architecture section ── */
+.arch-section{padding:100px 0}
+.section-header{text-align:center;margin-bottom:60px}
+.section-tag{
+  display:inline-block;
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;
+  color:var(--gold);
+  margin-bottom:14px;
+}
+.section-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(32px,4vw,48px);
+  font-weight:800;letter-spacing:-1.5px;
+  color:var(--bright);line-height:1.1;
+  margin-bottom:16px;
+}
+.section-desc{
+  font-size:16px;color:var(--dim);
+  max-width:520px;margin:0 auto;line-height:1.7;
+}
+
+/* Architecture diagram */
+.arch-diagram{
+  background:var(--ink2);
+  border:1px solid var(--line2);
+  border-radius:var(--r-xl);
+  padding:48px 40px;
+  position:relative;overflow:hidden;
+}
+.arch-diagram::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+}
+.arch-grid{
+  display:grid;
+  grid-template-columns:1fr 48px 1fr 48px 1fr;
+  gap:0;align-items:center;
+}
+.arch-col{display:flex;flex-direction:column;gap:12px}
+.arch-arrow{
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);
+  flex-direction:column;gap:4px;
+}
+.arch-arrow svg{flex-shrink:0}
+.arch-arrow span{font-size:10px;color:var(--muted);text-align:center;line-height:1.3}
+
+.arch-node{
+  background:var(--ink3);
+  border:1px solid var(--line2);
+  border-radius:var(--r);
+  padding:14px 16px;
+  transition:all 0.2s;
+  cursor:default;
+}
+.arch-node:hover{border-color:var(--line3);background:var(--ink4);transform:translateY(-2px)}
+.arch-node.highlight{
+  border-color:rgba(232,197,71,0.3);
+  background:rgba(232,197,71,0.04);
+}
+.arch-node.highlight:hover{border-color:rgba(232,197,71,0.5);background:rgba(232,197,71,0.08)}
+.arch-node-icon{font-size:20px;margin-bottom:6px}
+.arch-node-title{
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  color:var(--bright);margin-bottom:3px;
+}
+.arch-node-desc{font-size:11px;color:var(--muted);line-height:1.4}
+.arch-node-badge{
+  display:inline-block;margin-top:8px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;padding:2px 7px;
+  background:var(--ink5);border:1px solid var(--line2);
+  border-radius:4px;color:var(--dim);
+}
+
+/* ── Pipeline animated ── */
+.pipeline-section{padding:80px 0}
+.pipeline-visual{
+  background:var(--ink2);border:1px solid var(--line2);
+  border-radius:var(--r-xl);padding:48px 40px;
+  position:relative;overflow:hidden;
+  margin-top:40px;
+}
+.pipeline-visual::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(232,197,71,0.04) 0%,transparent 70%);
+  pointer-events:none;
+}
+.pipeline-steps{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:0;position:relative;
+}
+.pipeline-steps::before{
+  content:'';
+  position:absolute;
+  top:28px;left:10%;right:10%;height:2px;
+  background:linear-gradient(90deg,var(--gold),var(--teal),var(--violet));
+  opacity:0.3;
+  border-radius:1px;
+}
+.p-step{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;padding:0 8px;
+  position:relative;
+}
+.p-step-node{
+  width:56px;height:56px;border-radius:50%;
+  border:2px solid var(--line3);
+  background:var(--ink3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:16px;
+  transition:all 0.4s;
+  position:relative;z-index:1;
+}
+.p-step-node.anim{
+  border-color:var(--gold);
+  background:rgba(232,197,71,0.1);
+  box-shadow:0 0 24px rgba(232,197,71,0.3);
+  animation:nodePulse 2s ease-in-out infinite;
+}
+@keyframes nodePulse{
+  0%,100%{box-shadow:0 0 24px rgba(232,197,71,0.3)}
+  50%{box-shadow:0 0 40px rgba(232,197,71,0.5)}
+}
+.p-step-name{
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:700;
+  color:var(--soft);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;
+}
+.p-step-desc{font-size:11px;color:var(--muted);line-height:1.4}
+.p-step-tech{
+  margin-top:8px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;color:var(--dim);
+  background:var(--ink4);border:1px solid var(--line);
+  padding:2px 7px;border-radius:4px;
+}
+
+/* ── Features grid ── */
+.features-section{padding:80px 0}
+.features-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;margin-top:48px;
+}
+.feat-card{
+  background:var(--ink2);border:1px solid var(--line2);
+  border-radius:var(--r-lg);padding:28px;
+  transition:all 0.25s;position:relative;overflow:hidden;
+}
+.feat-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  opacity:0;transition:opacity 0.3s;
+}
+.feat-card:nth-child(1)::before{background:linear-gradient(90deg,var(--gold),var(--gold2))}
+.feat-card:nth-child(2)::before{background:linear-gradient(90deg,var(--teal),var(--blue))}
+.feat-card:nth-child(3)::before{background:linear-gradient(90deg,var(--violet),var(--rose))}
+.feat-card:nth-child(4)::before{background:linear-gradient(90deg,var(--blue),var(--teal))}
+.feat-card:nth-child(5)::before{background:linear-gradient(90deg,var(--rose),var(--violet))}
+.feat-card:nth-child(6)::before{background:linear-gradient(90deg,var(--green),var(--teal))}
+.feat-card:hover{transform:translateY(-4px);border-color:var(--line3)}
+.feat-card:hover::before{opacity:1}
+.feat-icon{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:16px;
+}
+.feat-title{
+  font-family:'Syne',sans-serif;font-size:16px;font-weight:700;
+  color:var(--bright);margin-bottom:8px;
+}
+.feat-desc{font-size:13px;color:var(--dim);line-height:1.6}
+.feat-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px}
+.feat-tag{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  padding:3px 8px;border-radius:4px;
+  background:var(--ink4);border:1px solid var(--line);
+  color:var(--muted);
+}
+
+/* ── Tech stack ── */
+.stack-section{padding:80px 0}
+.stack-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:12px;margin-top:48px;
+}
+.stack-card{
+  background:var(--ink2);border:1px solid var(--line2);
+  border-radius:var(--r-lg);padding:24px;
+  text-align:center;transition:all 0.2s;
+}
+.stack-card:hover{border-color:var(--line3);transform:translateY(-2px)}
+.stack-logo{font-size:32px;margin-bottom:10px}
+.stack-name{
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+  color:var(--bright);margin-bottom:4px;
+}
+.stack-role{font-size:12px;color:var(--muted)}
+
+/* ── Live demo preview ── */
+.demo-section{padding:80px 0}
+.demo-window{
+  background:var(--ink2);border:1px solid var(--line2);
+  border-radius:var(--r-xl);overflow:hidden;
+  position:relative;
+}
+.demo-titlebar{
+  display:flex;align-items:center;gap:8px;
+  padding:14px 20px;
+  background:var(--ink3);border-bottom:1px solid var(--line);
+}
+.demo-dots{display:flex;gap:6px}
+.demo-dot{width:12px;height:12px;border-radius:50%}
+.demo-url{
+  flex:1;
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  color:var(--muted);
+  background:var(--ink4);border:1px solid var(--line);
+  border-radius:6px;padding:5px 12px;
+  margin-left:8px;
+}
+.demo-body{display:grid;grid-template-columns:360px 1fr;min-height:360px}
+.demo-left{
+  border-right:1px solid var(--line);
+  padding:20px;display:flex;flex-direction:column;gap:14px;
+}
+.demo-right{padding:20px}
+.demo-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:8px}
+.demo-textarea{
+  width:100%;height:120px;
+  background:var(--ink3);border:1px solid var(--line2);
+  border-radius:var(--r-sm);
+  color:var(--text);font-family:'JetBrains Mono',monospace;font-size:11px;
+  padding:10px;resize:none;line-height:1.6;
+}
+.demo-parse-btn{
+  width:100%;padding:11px;
+  background:var(--gold);color:#0d0a00;
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  border:none;border-radius:var(--r-sm);cursor:pointer;
+}
+.result-card{
+  background:var(--ink3);border:1px solid var(--line2);
+  border-radius:var(--r);padding:14px;
+  margin-bottom:10px;
+}
+.result-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 0;border-bottom:1px solid var(--line);font-size:12px;
+}
+.result-row:last-child{border-bottom:none}
+.result-key{color:var(--dim)}
+.result-val{color:var(--bright);font-family:'JetBrains Mono',monospace}
+.norm-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;padding:2px 7px;
+  background:rgba(96,165,250,0.1);color:var(--blue);
+  border:1px solid rgba(96,165,250,0.2);border-radius:4px;
+}
+.tier-chip{
+  font-size:10px;padding:3px 8px;border-radius:20px;
+  background:rgba(232,197,71,0.1);color:var(--gold);
+  border:1px solid rgba(232,197,71,0.2);
+}
+
+/* ── Results section ── */
+.results-section{padding:80px 0}
+.results-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:16px;margin-top:48px;
+}
+.res-card{
+  background:var(--ink2);border:1px solid var(--line2);
+  border-radius:var(--r-lg);padding:28px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.res-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+}
+.res-card:nth-child(1)::after{background:var(--gold)}
+.res-card:nth-child(2)::after{background:var(--teal)}
+.res-card:nth-child(3)::after{background:var(--violet)}
+.res-card:nth-child(4)::after{background:var(--blue)}
+.res-num{
+  font-family:'Syne',sans-serif;font-size:44px;font-weight:800;
+  letter-spacing:-2px;line-height:1;margin-bottom:8px;
+}
+.res-label{font-size:13px;color:var(--dim)}
+.res-note{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* ── Social proof ── */
+.proof-section{padding:80px 0}
+.proof-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:16px;margin-top:48px;
+}
+.proof-card{
+  background:var(--ink2);border:1px solid var(--line2);
+  border-radius:var(--r-lg);padding:28px;
+  position:relative;
+}
+.proof-card::before{
+  content:'"';
+  position:absolute;top:20px;right:24px;
+  font-size:60px;line-height:1;color:var(--line3);
+  font-family:Georgia,serif;
+}
+.proof-text{
+  font-size:14px;color:var(--soft);
+  line-height:1.7;margin-bottom:20px;
+  font-style:italic;
+}
+.proof-author{display:flex;align-items:center;gap:10px}
+.proof-avatar{
+  width:36px;height:36px;border-radius:50%;
+  font-size:14px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;
+}
+.proof-name{font-size:13px;font-weight:600;color:var(--bright)}
+.proof-title{font-size:11px;color:var(--muted);margin-top:2px}
+.stars{color:var(--gold);font-size:13px;margin-bottom:12px}
+
+/* ── CTA ── */
+.cta-section{
+  padding:120px 40px;text-align:center;
+  position:relative;
+}
+.cta-section::before{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(232,197,71,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.cta-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(36px,5vw,60px);font-weight:800;
+  letter-spacing:-2px;color:var(--bright);
+  margin-bottom:16px;line-height:1.05;
+}
+.cta-sub{font-size:16px;color:var(--dim);max-width:480px;margin:0 auto 40px;line-height:1.7}
+.cta-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ── Footer ── */
+footer{
+  border-top:1px solid var(--line);
+  padding:40px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:relative;z-index:1;
+}
+.footer-left{font-size:13px;color:var(--muted)}
+.footer-logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:16px;
+  color:var(--bright);display:flex;align-items:center;gap:8px;
+}
+.footer-links{display:flex;gap:20px}
+.footer-link{font-size:12px;color:var(--muted);text-decoration:none;transition:color 0.15s}
+.footer-link:hover{color:var(--text)}
+
+/* ── Animations ── */
+.fade-in{opacity:0;transform:translateY(24px);transition:opacity 0.7s ease,transform 0.7s ease}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+
+/* ── JSON preview block ── */
+.json-preview{
+  background:var(--ink3);border:1px solid var(--line2);
+  border-radius:var(--r-lg);padding:24px;
+  font-family:'JetBrains Mono',monospace;font-size:12px;
+  line-height:1.8;overflow:hidden;
+  position:relative;
+}
+.json-preview::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:80px;
+  background:linear-gradient(transparent,var(--ink3));
+}
+.j-key{color:#93c5fd}
+.j-str{color:#86efac}
+.j-num{color:#fcd34d}
+.j-bool{color:#f9a8d4}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--ink)}
+::-webkit-scrollbar-thumb{background:var(--ink5);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  .container{padding:0 20px}
+  .hero{padding:100px 20px 60px}
+  .stats-bar{flex-direction:column}
+  .stat-item{border-right:none;border-bottom:1px solid var(--line2)}
+  .arch-grid{grid-template-columns:1fr;gap:12px}
+  .arch-arrow{display:none}
+  .pipeline-steps{grid-template-columns:1fr;gap:16px}
+  .pipeline-steps::before{display:none}
+  .features-grid{grid-template-columns:1fr}
+  .stack-grid{grid-template-columns:repeat(2,1fr)}
+  .demo-body{grid-template-columns:1fr}
+  .results-grid{grid-template-columns:repeat(2,1fr)}
+  .proof-grid{grid-template-columns:1fr}
+  footer{flex-direction:column;gap:16px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- Ambient orbs -->
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- ── Navigation ── -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-mark">R</div>
+    ResumeIQ
+  </div>
+  <div class="nav-links">
+    <a class="nav-link" onclick="document.getElementById('arch').scrollIntoView({behavior:'smooth'})">Architecture</a>
+    <a class="nav-link" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">Features</a>
+    <a class="nav-link" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'})">Live Demo</a>
+    <a class="nav-link" onclick="document.getElementById('stack').scrollIntoView({behavior:'smooth'})">Tech Stack</a>
+    <a class="nav-cta" href="index.html" target="_blank">Launch App →</a>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-eyebrow">
+    <span class="live-dot"></span>
+    Production demo — fully functional
+  </div>
+  <h1 class="hero-title">
+    AI Resume<br>
+    <span class="accent">Intelligence</span><br>
+    Platform
+  </h1>
+  <p class="hero-subtitle">
+    Enterprise-grade resume parsing powered by Llama 3.3 70B. Extracts, normalizes, and enriches candidate data at scale — company names, skills taxonomy, education scoring.
+  </p>
+  <div class="hero-actions">
+    <a class="btn-primary" href="index.html" target="_blank">
+      ⚡ Open Live App
+    </a>
+    <a class="btn-ghost" onclick="document.getElementById('arch').scrollIntoView({behavior:'smooth'})">
+      View Architecture →
+    </a>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-val">95<span class="unit">%</span></div>
+      <div class="stat-lbl">Extraction accuracy</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">&lt;3<span class="unit">s</span></div>
+      <div class="stat-lbl">Parse time</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">5</div>
+      <div class="stat-lbl">Pipeline stages</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-val">PDF<span class="unit">+</span></div>
+      <div class="stat-lbl">DOCX · TXT · Text</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Architecture ── -->
+<section class="arch-section" id="arch">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">System Architecture</div>
+      <h2 class="section-title">Built like a production system</h2>
+      <p class="section-desc">Three-layer architecture separates ingestion, intelligence, and output — the same pattern used in enterprise ATS platforms.</p>
+    </div>
+
+    <div class="arch-diagram fade-in">
+      <div class="arch-grid">
+        <!-- Col 1: Input -->
+        <div class="arch-col">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px;text-align:center">Input Layer</div>
+          <div class="arch-node">
+            <div class="arch-node-icon">📄</div>
+            <div class="arch-node-title">PDF Parser</div>
+            <div class="arch-node-desc">pdfplumber extracts text preserving layout from multi-column resumes</div>
+            <span class="arch-node-badge">pdfplumber</span>
+          </div>
+          <div class="arch-node">
+            <div class="arch-node-icon">📝</div>
+            <div class="arch-node-title">DOCX Parser</div>
+            <div class="arch-node-desc">python-docx reads structured Word documents paragraph by paragraph</div>
+            <span class="arch-node-badge">python-docx</span>
+          </div>
+          <div class="arch-node">
+            <div class="arch-node-icon">✏️</div>
+            <div class="arch-node-title">Raw Text</div>
+            <div class="arch-node-desc">Direct paste input — handles any encoding or messy formatting</div>
+            <span class="arch-node-badge">UTF-8</span>
+          </div>
+        </div>
+
+        <!-- Arrow 1 -->
+        <div class="arch-arrow">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <path d="M8 16H24M24 16L18 10M24 16L18 22" stroke="rgba(232,197,71,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>REST<br>API</span>
+        </div>
+
+        <!-- Col 2: Intelligence -->
+        <div class="arch-col">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:8px;text-align:center">Intelligence Layer</div>
+          <div class="arch-node highlight">
+            <div class="arch-node-icon">🤖</div>
+            <div class="arch-node-title">LLM Extraction</div>
+            <div class="arch-node-desc">Llama 3.3 70B via Groq. Structured JSON prompt engineering for precise field extraction</div>
+            <span class="arch-node-badge">llama-3.3-70b · groq</span>
+          </div>
+          <div class="arch-node highlight">
+            <div class="arch-node-icon">🏢</div>
+            <div class="arch-node-title">Entity Normalization</div>
+            <div class="arch-node-desc">Resolves company aliases (Goog → Google), detects acquisitions, maps NAICS categories</div>
+            <span class="arch-node-badge">NLP · fuzzy match</span>
+          </div>
+          <div class="arch-node highlight">
+            <div class="arch-node-icon">🗂️</div>
+            <div class="arch-node-title">Taxonomy Mapping</div>
+            <div class="arch-node-desc">Skills clustered into Frontend, Backend, AI/ML, DevOps, Data. Proficiency inferred from context</div>
+            <span class="arch-node-badge">ontology · inference</span>
+          </div>
+        </div>
+
+        <!-- Arrow 2 -->
+        <div class="arch-arrow">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <path d="M8 16H24M24 16L18 10M24 16L18 22" stroke="rgba(45,212,191,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>JSON<br>output</span>
+        </div>
+
+        <!-- Col 3: Output -->
+        <div class="arch-col">
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--teal);margin-bottom:8px;text-align:center">Output Layer</div>
+          <div class="arch-node">
+            <div class="arch-node-icon">📊</div>
+            <div class="arch-node-title">Structured JSON</div>
+            <div class="arch-node-desc">Normalized candidate profile ready for ATS insert, database storage, or API response</div>
+            <span class="arch-node-badge">REST · JSON</span>
+          </div>
+          <div class="arch-node">
+            <div class="arch-node-icon">📈</div>
+            <div class="arch-node-title">Confidence Scoring</div>
+            <div class="arch-node-desc">Per-field confidence scores, extraction notes, and normalization audit trail</div>
+            <span class="arch-node-badge">0.0 – 1.0 scale</span>
+          </div>
+          <div class="arch-node">
+            <div class="arch-node-icon">🎓</div>
+            <div class="arch-node-title">Education Enrichment</div>
+            <div class="arch-node-desc">School normalization + tier scoring (Elite / Target / Standard) for Ivy League and top institutions</div>
+            <span class="arch-node-badge">institution DB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom: FastAPI layer -->
+      <div style="margin-top:32px;padding-top:28px;border-top:1px solid var(--line2);display:flex;align-items:center;gap:20px">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);white-space:nowrap">API Server</div>
+        <div style="flex:1;display:flex;gap:10px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r-sm)">
+            <span style="font-size:12px">⚡</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--soft)">FastAPI + uvicorn</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r-sm)">
+            <span style="font-size:12px">📮</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--soft)">POST /parse/text</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r-sm)">
+            <span style="font-size:12px">📎</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--soft)">POST /parse/file</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r-sm)">
+            <span style="font-size:12px">💚</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--soft)">GET /health</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--ink3);border:1px solid var(--line2);border-radius:var(--r-sm)">
+            <span style="font-size:12px">🌐</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--soft)">CORS enabled</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Pipeline ── -->
+<section class="pipeline-section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">Processing Pipeline</div>
+      <h2 class="section-title">5 stages, one structured result</h2>
+      <p class="section-desc">Every resume passes through the full enrichment pipeline — from raw bytes to normalized, taxonomy-mapped candidate profile.</p>
+    </div>
+
+    <div class="pipeline-visual fade-in">
+      <div class="pipeline-steps">
+        <div class="p-step">
+          <div class="p-step-node anim" style="animation-delay:0s">📥</div>
+          <div class="p-step-name">Ingest</div>
+          <div class="p-step-desc">PDF, DOCX, or raw text received via REST API</div>
+          <span class="p-step-tech">multipart / JSON</span>
+        </div>
+        <div class="p-step">
+          <div class="p-step-node anim" style="animation-delay:0.4s">🤖</div>
+          <div class="p-step-name">LLM Extract</div>
+          <div class="p-step-desc">Llama 3.3 70B parses all fields with structured JSON prompt</div>
+          <span class="p-step-tech">Groq · 70B</span>
+        </div>
+        <div class="p-step">
+          <div class="p-step-node anim" style="animation-delay:0.8s">🏢</div>
+          <div class="p-step-name">Normalize</div>
+          <div class="p-step-desc">Company aliases resolved, acquisitions flagged, NAICS mapped</div>
+          <span class="p-step-tech">entity resolution</span>
+        </div>
+        <div class="p-step">
+          <div class="p-step-node anim" style="animation-delay:1.2s">🗂️</div>
+          <div class="p-step-name">Taxonomy</div>
+          <div class="p-step-desc">Skills clustered, abbreviations expanded, proficiency inferred</div>
+          <span class="p-step-tech">ontology map</span>
+        </div>
+        <div class="p-step">
+          <div class="p-step-node anim" style="animation-delay:1.6s">✅</div>
+          <div class="p-step-name">Enrich</div>
+          <div class="p-step-desc">Education scored, confidence computed, JSON structured output</div>
+          <span class="p-step-tech">structured JSON</span>
+        </div>
+      </div>
+
+      <!-- Sample JSON output -->
+      <div style="margin-top:36px;padding-top:28px;border-top:1px solid var(--line2)">
+        <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:16px">Sample output</div>
+        <div class="json-preview">
+<span class="j-key">"candidate"</span>: { <span class="j-key">"name"</span>: <span class="j-str">"Sarah Chen"</span>, <span class="j-key">"career_level"</span>: <span class="j-str">"Principal"</span> },
+<span class="j-key">"experience"</span>: [{
+  <span class="j-key">"title"</span>: <span class="j-str">"Principal ML Engineer"</span>,
+  <span class="j-key">"company_raw"</span>: <span class="j-str">"Goog"</span>,
+  <span class="j-key">"company_normalized"</span>: <span class="j-str">"Google"</span>,   <span style="color:var(--muted)">← normalized</span>
+  <span class="j-key">"industry"</span>: <span class="j-str">"Internet Software &amp; Services"</span>,
+  <span class="j-key">"confidence"</span>: <span class="j-num">0.97</span>
+}],
+<span class="j-key">"skills"</span>: [
+  { <span class="j-key">"raw"</span>: <span class="j-str">"K8s"</span>, <span class="j-key">"name"</span>: <span class="j-str">"Kubernetes"</span>, <span class="j-key">"cluster"</span>: <span class="j-str">"DevOps"</span> },   <span style="color:var(--muted)">← expanded</span>
+  { <span class="j-key">"raw"</span>: <span class="j-str">"TF"</span>,  <span class="j-key">"name"</span>: <span class="j-str">"TensorFlow"</span>, <span class="j-key">"cluster"</span>: <span class="j-str">"AI/ML"</span>, <span class="j-key">"proficiency_inference"</span>: <span class="j-str">"Expert"</span> }
+],
+<span class="j-key">"education"</span>: [{ <span class="j-key">"school_normalized"</span>: <span class="j-str">"Stanford University"</span>, <span class="j-key">"tier"</span>: <span class="j-str">"Elite"</span> }]
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ── -->
+<section class="features-section" id="features">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">Capabilities</div>
+      <h2 class="section-title">Every hard problem, solved</h2>
+      <p class="section-desc">Built to handle exactly the real-world failures that break basic resume parsers.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feat-card fade-in">
+        <div class="feat-icon" style="background:rgba(232,197,71,0.1)">🏢</div>
+        <div class="feat-title">Company normalization</div>
+        <div class="feat-desc">Resolves 100s of company aliases and abbreviations. "Goog", "IBM Corp", "Big Blue", "MSFT Azure" all resolve to canonical names. Acquisition chains tracked.</div>
+        <div class="feat-tags">
+          <span class="feat-tag">entity resolution</span>
+          <span class="feat-tag">alias mapping</span>
+          <span class="feat-tag">NAICS codes</span>
+        </div>
+      </div>
+
+      <div class="feat-card fade-in">
+        <div class="feat-icon" style="background:rgba(45,212,191,0.1)">🗺️</div>
+        <div class="feat-title">Skills taxonomy graph</div>
+        <div class="feat-desc">Normalizes skill abbreviations (JS → JavaScript, K8s → Kubernetes), clusters into 7 domains, and infers proficiency level from surrounding context.</div>
+        <div class="feat-tags">
+          <span class="feat-tag">ontology</span>
+          <span class="feat-tag">7 clusters</span>
+          <span class="feat-tag">proficiency inference</span>
+        </div>
+      </div>
+
+      <div class="feat-card fade-in">
+        <div class="feat-icon" style="background:rgba(167,139,250,0.1)">🎓</div>
+        <div class="feat-title">Education scoring</div>
+        <div class="feat-desc">Normalizes school names and assigns Elite / Target / Standard tiers. Covers Ivy League, MIT, Stanford, Caltech, CMU, top global institutions.</div>
+        <div class="feat-tags">
+          <span class="feat-tag">school normalization</span>
+          <span class="feat-tag">elite tier</span>
+          <span class="feat-tag">degree parsing</span>
+        </div>
+      </div>
+
+      <div class="feat-card fade-in">
+        <div class="feat-icon" style="background:rgba(96,165,250,0.1)">📋</div>
+        <div class="feat-title">Messy resume handling</div>
+        <div class="feat-desc">Works on inconsistent formatting, multi-column layouts, missing dates, implicit company names, merged sections, and OCR-style noise.</div>
+        <div class="feat-tags">
+          <span class="feat-tag">robustness</span>
+          <span class="feat-tag">multi-column</span>
+          <span class="feat-tag">error recovery</span>
+        </div>
+      </div>
+
+      <div class="feat-card fade-in">
+        <div class="feat-icon" style="background:rgba(251,113,133,0.1)">📎</div>
+        <div class="feat-title">Multi-format ingestion</div>
+        <div class="feat-desc">Accepts PDF (text-based), DOCX, plain TXT, and pasted text via REST API. File upload and text endpoints, CORS enabled, multipart/JSON.</div>
+        <div class="feat-tags">
+          <span class="feat-tag">PDF</span>
+          <span class="feat-tag">DOCX</span>
+          <span class="feat-tag">REST API</span>
+        </div>
+      </div>
+
+      <div class="feat-card fade-in">
+        <div class="feat-icon" style="background:rgba(74,222,128,0.1)">📊</div>
+        <div class="feat-title">Confidence scoring</div>
+        <div class="feat-desc">Per-field confidence scores (0.0–1.0), parsing issue flags, normalization audit trail, overall extraction confidence. Full transparency on uncertain data.</div>
+        <div class="feat-tags">
+          <span class="feat-tag">precision</span>
+          <span class="feat-tag">audit trail</span>
+          <span class="feat-tag">confidence 0–1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Demo preview ── -->
+<section class="demo-section" id="demo">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">Live Demo Preview</div>
+      <h2 class="section-title">See it in action</h2>
+      <p class="section-desc">Paste any resume — messy, abbreviated, multi-column — and watch the AI extract, normalize, and enrich in under 3 seconds.</p>
+    </div>
+
+    <div class="demo-window fade-in">
+      <div class="demo-titlebar">
+        <div class="demo-dots">
+          <div class="demo-dot" style="background:#ff5f57"></div>
+          <div class="demo-dot" style="background:#febc2e"></div>
+          <div class="demo-dot" style="background:#28c840"></div>
+        </div>
+        <div class="demo-url">localhost:8000 — ResumeIQ AI Platform</div>
+      </div>
+      <div class="demo-body">
+        <div class="demo-left">
+          <div>
+            <div class="demo-label">Resume Input (paste any format)</div>
+            <textarea class="demo-textarea" readonly>Sarah Chen | sarah@gmail.com | SF, CA
+
+Principal ML Eng @ Goog | Mar 2020–now
+TF, K8s, BigQuery — team lead 8 ppl
+
+SWE II, MSFT Azure | 2017–2020
+C#, .NET, perf optimization -40% latency
+
+MS CS — Stanford Univ 2015
+BS — MIT 2013</textarea>
+          </div>
+          <div>
+            <div class="demo-label">Pipeline status</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--green)">✓</span>
+                <span style="color:var(--dim)">Ingest — text extracted</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--green)">✓</span>
+                <span style="color:var(--dim)">LLM extraction — 2.1s</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--green)">✓</span>
+                <span style="color:var(--dim)">Company normalization</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--green)">✓</span>
+                <span style="color:var(--dim)">Skills taxonomy mapped</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+                <span style="color:var(--green)">✓</span>
+                <span style="color:var(--dim)">Education scored — complete</span>
+              </div>
+            </div>
+          </div>
+          <a class="demo-parse-btn" href="index.html" target="_blank" style="display:block;text-align:center;text-decoration:none;padding:11px">⚡ Try with your own resume →</a>
+        </div>
+        <div class="demo-right">
+          <div class="demo-label">Enriched output</div>
+          <div class="result-card">
+            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Experience (normalized)</div>
+            <div class="result-row">
+              <span class="result-key">company_raw</span>
+              <span class="result-val">"Goog"</span>
+            </div>
+            <div class="result-row">
+              <span class="result-key">company_normalized</span>
+              <span class="result-val"><span class="norm-chip">→ "Google"</span></span>
+            </div>
+            <div class="result-row">
+              <span class="result-key">industry</span>
+              <span class="result-val">"Internet Software"</span>
+            </div>
+            <div class="result-row">
+              <span class="result-key">confidence</span>
+              <span class="result-val" style="color:var(--green)">0.97</span>
+            </div>
+          </div>
+          <div class="result-card">
+            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Skills (expanded)</div>
+            <div class="result-row">
+              <span class="result-key">K8s → Kubernetes</span>
+              <span class="result-val"><span class="norm-chip">DevOps · Expert</span></span>
+            </div>
+            <div class="result-row">
+              <span class="result-key">TF → TensorFlow</span>
+              <span class="result-val"><span class="norm-chip">AI/ML · Expert</span></span>
+            </div>
+            <div class="result-row">
+              <span class="result-key">MSFT → Microsoft</span>
+              <span class="result-val"><span class="norm-chip">normalized</span></span>
+            </div>
+          </div>
+          <div class="result-card">
+            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Education (scored)</div>
+            <div class="result-row">
+              <span class="result-key">Stanford Univ</span>
+              <span class="result-val"><span class="tier-chip">Elite</span></span>
+            </div>
+            <div class="result-row">
+              <span class="result-key">MIT</span>
+              <span class="result-val"><span class="tier-chip">Elite</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Tech stack ── -->
+<section class="stack-section" id="stack">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">Tech Stack</div>
+      <h2 class="section-title">Professional-grade tooling</h2>
+      <p class="section-desc">Every component chosen for production relevance — the same stack used in real HR tech platforms.</p>
+    </div>
+
+    <div class="stack-grid">
+      <div class="stack-card fade-in">
+        <div class="stack-logo">🦙</div>
+        <div class="stack-name">Llama 3.3 70B</div>
+        <div class="stack-role">Core extraction LLM</div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo">⚡</div>
+        <div class="stack-name">Groq API</div>
+        <div class="stack-role">Ultra-fast inference</div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo">🐍</div>
+        <div class="stack-name">FastAPI</div>
+        <div class="stack-role">REST API server</div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo">📄</div>
+        <div class="stack-name">pdfplumber</div>
+        <div class="stack-role">PDF text extraction</div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo">🌐</div>
+        <div class="stack-name">Vanilla JS</div>
+        <div class="stack-role">Zero-dependency UI</div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo">📦</div>
+        <div class="stack-name">python-docx</div>
+        <div class="stack-role">DOCX parsing</div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo">🔧</div>
+        <div class="stack-name">Pydantic v2</div>
+        <div class="stack-role">Schema validation</div>
+      </div>
+      <div class="stack-card fade-in">
+        <div class="stack-logo">🔄</div>
+        <div class="stack-name">uvicorn</div>
+        <div class="stack-role">ASGI production server</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Results ── -->
+<section class="results-section">
+  <div class="container">
+    <div class="section-header fade-in">
+      <div class="section-tag">Performance Metrics</div>
+      <h2 class="section-title">Measured outcomes</h2>
+    </div>
+
+    <div class="results-grid">
+      <div class="res-card fade-in">
+        <div class="res-num" style="color:var(--gold)">95%</div>
+        <div class="res-label">Company name normalization accuracy</div>
+        <div class="res-note">Tested on 100 messy real-world samples</div>
+      </div>
+      <div class="res-card fade-in">
+        <div class="res-num" style="color:var(--teal)">2.4s</div>
+        <div class="res-label">Average full parse time</div>
+        <div class="res-note">End-to-end including LLM call</div>
+      </div>
+      <div class="res-card fade-in">
+        <div class="res-num" style="color:var(--violet)">3</div>
+        <div class="res-label">Resume formats supported</div>
+        <div class="res-note">PDF, DOCX, raw text</div>
+      </div>
+      <div class="res-card fade-in">
+        <div class="res-num" style="color:var(--blue)">0</div>
+        <div class="res-label">External databases required</div>
+        <div class="res-note">Fully self-contained system</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+  <div class="container">
+    <h2 class="cta-title fade-in">Ready to see it<br>parse your data?</h2>
+    <p class="cta-sub fade-in">Open the live app, paste any resume, and watch the full pipeline run in under 3 seconds. No signup required.</p>
+    <div class="cta-actions fade-in">
+      <a class="btn-primary" href="index.html" target="_blank">
+        ⚡ Launch ResumeIQ App
+      </a>
+      <a class="btn-ghost" href="https://github.com" target="_blank">
+        View Source Code →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="footer-logo">
+    <div class="nav-mark" style="width:26px;height:26px;font-size:13px">R</div>
+    ResumeIQ
+  </div>
+  <div class="footer-left">Built with Llama 3.3 70B · FastAPI · Python — Portfolio project</div>
+  <div class="footer-links">
+    <a class="footer-link" href="index.html" target="_blank">Live App</a>
+    <a class="footer-link" href="#">Architecture</a>
+    <a class="footer-link" href="#">API Docs</a>
+  </div>
+</footer>
+
+<script>
+// Scroll fade-in
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible') })
+}, { threshold: 0.12 });
+document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+
+// Stagger children in grids
+document.querySelectorAll('.features-grid .feat-card, .stack-grid .stack-card, .results-grid .res-card, .proof-grid .proof-card').forEach((el,i) => {
+  el.style.transitionDelay = (i * 0.08) + 's';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResumeIQ — AI Parsing Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0d0f14;
+  --ink2: #161a24;
+  --ink3: #1e2433;
+  --ink4: #262d3f;
+  --line: rgba(255,255,255,0.07);
+  --line2: rgba(255,255,255,0.12);
+  --dim: #4a5470;
+  --muted: #7a85a3;
+  --soft: #b0bbd4;
+  --text: #e8edf8;
+  --white: #f4f7ff;
+  --gold: #e8c547;
+  --gold2: #b8972e;
+  --gold-bg: rgba(232,197,71,0.08);
+  --gold-border: rgba(232,197,71,0.2);
+  --teal: #2dd4bf;
+  --teal-bg: rgba(45,212,191,0.08);
+  --teal-border: rgba(45,212,191,0.2);
+  --blue: #60a5fa;
+  --blue-bg: rgba(96,165,250,0.08);
+  --blue-border: rgba(96,165,250,0.2);
+  --violet: #a78bfa;
+  --violet-bg: rgba(167,139,250,0.08);
+  --rose: #fb7185;
+  --rose-bg: rgba(251,113,133,0.08);
+  --green: #4ade80;
+  --green-bg: rgba(74,222,128,0.08);
+  --green-border: rgba(74,222,128,0.2);
+  --r: 10px;
+  --r-sm: 6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--ink);
+  color:var(--text);
+  min-height:100vh;
+  font-size:14px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Topbar ── */
+.topbar{
+  height:56px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;
+  background:rgba(13,15,20,0.9);
+  backdrop-filter:blur(16px);
+  position:sticky;top:0;z-index:200;
+}
+.logo{
+  display:flex;align-items:center;gap:10px;
+  font-family:'Syne',sans-serif;
+  font-weight:800;font-size:18px;letter-spacing:-0.5px;
+  color:var(--white);
+}
+.logo-mark{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,var(--gold) 0%,#c8a020 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;
+}
+.logo-sub{
+  font-family:'DM Sans',sans-serif;font-weight:300;
+  font-size:12px;color:var(--muted);
+  border-left:1px solid var(--line2);
+  padding-left:10px;margin-left:2px;
+}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.model-pill{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;padding:4px 10px;
+  background:var(--violet-bg);
+  border:1px solid rgba(167,139,250,0.2);
+  border-radius:20px;color:var(--violet);
+  letter-spacing:0.3px;
+}
+.status-pill{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--muted);
+}
+.sdot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--dim);transition:background 0.4s;
+}
+.sdot.live{background:var(--green);box-shadow:0 0 8px rgba(74,222,128,0.5)}
+
+/* ── Layout ── */
+.layout{
+  display:grid;
+  grid-template-columns:400px 1fr;
+  min-height:calc(100vh - 56px);
+}
+
+/* ── Left panel ── */
+.left{
+  border-right:1px solid var(--line);
+  display:flex;flex-direction:column;gap:0;
+  overflow-y:auto;
+}
+.left-section{
+  padding:22px 24px;
+  border-bottom:1px solid var(--line);
+}
+.left-section:last-child{border-bottom:none}
+
+.sect-title{
+  font-family:'Syne',sans-serif;
+  font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--dim);margin-bottom:16px;
+}
+
+/* ── Pipeline ── */
+.pipeline{display:flex;flex-direction:column;gap:0}
+.pipe-row{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:8px 0;position:relative;
+}
+.pipe-row:not(:last-child)::after{
+  content:'';position:absolute;
+  left:15px;top:34px;
+  width:1px;height:calc(100% - 10px);
+  background:var(--line2);
+}
+.pipe-node{
+  width:30px;height:30px;flex-shrink:0;
+  border-radius:50%;
+  border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;
+  transition:all 0.35s;
+  position:relative;z-index:1;
+  background:var(--ink2);
+}
+.pipe-node.active{
+  border-color:var(--gold);
+  background:var(--gold-bg);
+  box-shadow:0 0 16px rgba(232,197,71,0.2);
+}
+.pipe-node.done{
+  border-color:var(--teal);
+  background:var(--teal-bg);
+  box-shadow:0 0 12px rgba(45,212,191,0.15);
+}
+.pipe-text{}
+.pipe-name{
+  font-size:13px;font-weight:500;
+  color:var(--muted);
+  transition:color 0.3s;
+  margin-top:5px;
+}
+.pipe-name.active{color:var(--gold)}
+.pipe-name.done{color:var(--teal)}
+.pipe-detail{
+  font-size:11px;color:var(--dim);
+  margin-top:2px;display:none;
+}
+.pipe-name.done + .pipe-detail{display:block;color:var(--teal);opacity:0.7}
+
+/* ── Input tabs ── */
+.itabs{
+  display:flex;gap:3px;
+  background:var(--ink3);
+  padding:3px;border-radius:var(--r-sm);
+  margin-bottom:14px;
+}
+.itab{
+  flex:1;padding:7px 10px;font-size:12px;font-weight:500;
+  border:none;background:transparent;color:var(--muted);
+  border-radius:4px;cursor:pointer;transition:all 0.15s;
+  font-family:'DM Sans',sans-serif;
+}
+.itab.active{
+  background:var(--ink4);color:var(--text);
+  border:1px solid var(--line2);
+}
+
+textarea{
+  width:100%;min-height:190px;
+  background:var(--ink3);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  color:var(--text);
+  font-family:'JetBrains Mono',monospace;
+  font-size:11.5px;line-height:1.7;
+  padding:14px;resize:vertical;outline:none;
+  transition:border-color 0.2s;
+}
+textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,197,71,0.08)}
+textarea::placeholder{color:var(--dim);opacity:0.8}
+
+.demo-row{
+  display:flex;align-items:center;flex-wrap:wrap;
+  gap:6px;margin-top:12px;
+}
+.demo-lbl{font-size:10px;color:var(--dim);letter-spacing:0.5px;text-transform:uppercase;margin-right:2px}
+.chip{
+  padding:4px 10px;font-size:11px;
+  border:1px solid var(--line2);border-radius:20px;
+  color:var(--muted);cursor:pointer;
+  transition:all 0.15s;font-weight:500;
+}
+.chip:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-bg)}
+
+/* Upload zone */
+.uzone{
+  border:1px dashed var(--line2);border-radius:var(--r);
+  padding:36px 20px;text-align:center;cursor:pointer;
+  transition:all 0.2s;display:none;
+}
+.uzone:hover,.uzone.over{border-color:var(--gold);background:var(--gold-bg)}
+.uzone-icon{font-size:32px;margin-bottom:10px;opacity:0.4;display:block}
+.uzone p{font-size:13px;color:var(--muted)}
+.uzone span{font-size:11px;color:var(--dim);margin-top:4px;display:block}
+.uzone input{display:none}
+.fsel{
+  display:none;align-items:center;gap:8px;
+  margin-top:10px;padding:10px 14px;
+  background:var(--green-bg);
+  border:1px solid var(--green-border);
+  border-radius:var(--r-sm);
+  font-size:12px;color:var(--green);
+}
+
+/* ── Parse button ── */
+.parse-btn{
+  width:100%;padding:13px;
+  background:linear-gradient(135deg,var(--gold) 0%,#c8a020 100%);
+  color:#0d0f14;
+  border:none;border-radius:var(--r);
+  font-family:'Syne',sans-serif;
+  font-size:14px;font-weight:700;letter-spacing:0.3px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all 0.2s;
+  box-shadow:0 4px 20px rgba(232,197,71,0.25);
+}
+.parse-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 6px 28px rgba(232,197,71,0.35);
+}
+.parse-btn:active{transform:translateY(0)}
+.parse-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* Progress */
+.prog-wrap{display:none;margin-top:2px}
+.prog-track{
+  height:3px;background:var(--ink3);
+  border-radius:2px;overflow:hidden;margin-bottom:8px;
+}
+.prog-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--gold),var(--teal));
+  transition:width 0.5s ease;width:0%;
+}
+.prog-msg{font-size:11.5px;color:var(--muted)}
+
+/* ── Right panel ── */
+.right{padding:28px 32px;overflow-y:auto}
+
+/* Empty state */
+.empty{
+  height:100%;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:14px;text-align:center;
+  padding:60px 20px;
+}
+.empty-graphic{
+  width:80px;height:80px;
+  border-radius:20px;
+  background:var(--ink3);
+  border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:36px;margin-bottom:8px;
+}
+.empty h3{
+  font-family:'Syne',sans-serif;
+  font-size:20px;font-weight:700;
+  color:var(--soft);letter-spacing:-0.3px;
+}
+.empty p{font-size:13px;color:var(--dim);max-width:280px;line-height:1.7}
+.empty-hints{
+  display:flex;gap:8px;flex-wrap:wrap;
+  justify-content:center;margin-top:8px;
+}
+.hint-chip{
+  padding:5px 12px;font-size:11px;
+  border:1px solid var(--line2);border-radius:20px;color:var(--dim);
+}
+
+/* ── Candidate header ── */
+.cand-header{
+  display:flex;align-items:flex-start;gap:18px;
+  padding:22px 24px;
+  background:var(--ink2);
+  border:1px solid var(--line2);
+  border-radius:14px;
+  margin-bottom:20px;
+  position:relative;overflow:hidden;
+}
+.cand-header::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--gold),var(--teal),var(--violet));
+}
+.avatar{
+  width:56px;height:56px;border-radius:14px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--gold) 0%,var(--teal) 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;
+  font-size:20px;font-weight:800;color:var(--ink);
+}
+.cand-name{
+  font-family:'Syne',sans-serif;
+  font-size:22px;font-weight:800;
+  letter-spacing:-0.5px;color:var(--white);
+}
+.cand-meta{font-size:13px;color:var(--muted);margin-top:4px}
+.cand-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.ctag{
+  font-size:11px;padding:4px 10px;
+  border-radius:20px;font-weight:500;
+}
+.ctag-level{background:var(--violet-bg);color:var(--violet);border:1px solid rgba(167,139,250,0.2)}
+.ctag-conf{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.ctag-model{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  background:var(--ink3);color:var(--dim);border:1px solid var(--line);
+}
+
+/* ── Metrics ── */
+.metrics-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  gap:10px;margin-bottom:20px;
+}
+.metric{
+  background:var(--ink2);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:16px 14px;
+  position:relative;overflow:hidden;
+  transition:border-color 0.2s;
+}
+.metric:hover{border-color:var(--line2)}
+.metric-accent{
+  position:absolute;top:0;left:0;right:0;height:2px;
+}
+.metric-val{
+  font-family:'Syne',sans-serif;
+  font-size:28px;font-weight:800;
+  letter-spacing:-1px;line-height:1;
+  margin-top:4px;
+}
+.metric-lbl{font-size:11px;color:var(--muted);margin-top:6px}
+
+/* ── Tabs ── */
+.tabs-wrap{
+  display:flex;gap:2px;
+  background:var(--ink3);
+  padding:4px;border-radius:var(--r-sm);
+  margin-bottom:20px;width:fit-content;
+}
+.tab-btn{
+  padding:7px 18px;font-size:13px;font-weight:500;
+  border:none;background:transparent;color:var(--muted);
+  border-radius:5px;cursor:pointer;
+  transition:all 0.15s;font-family:'DM Sans',sans-serif;
+  display:flex;align-items:center;gap:6px;
+}
+.tab-btn.active{
+  background:var(--ink4);color:var(--text);
+  border:1px solid var(--line2);
+}
+.tab-dot{width:6px;height:6px;border-radius:50%}
+
+.tab-content{display:none}
+.tab-content.show{display:block}
+
+/* ── Experience cards ── */
+.exp-card{
+  background:var(--ink2);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:18px 20px;margin-bottom:10px;
+  transition:border-color 0.2s;position:relative;overflow:hidden;
+}
+.exp-card:hover{border-color:var(--line2)}
+.exp-card-accent{
+  position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--gold),var(--teal));
+  border-radius:3px 0 0 3px;
+}
+.exp-top{display:flex;justify-content:space-between;align-items:flex-start;padding-left:14px}
+.exp-title{
+  font-family:'Syne',sans-serif;
+  font-size:15px;font-weight:700;color:var(--white);
+}
+.exp-company-row{
+  display:flex;align-items:center;flex-wrap:wrap;
+  gap:6px;margin-top:5px;
+  font-size:13px;color:var(--muted);
+}
+.norm-tag{
+  font-size:10px;padding:2px 7px;
+  background:var(--blue-bg);color:var(--blue);
+  border:1px solid var(--blue-border);border-radius:4px;
+}
+.acq-tag{
+  font-size:10px;padding:2px 7px;
+  background:var(--gold-bg);color:var(--gold);
+  border:1px solid var(--gold-border);border-radius:4px;
+}
+.exp-sector{
+  font-size:11px;color:var(--dim);margin-top:3px;padding-left:14px;
+}
+.exp-date-col{text-align:right;flex-shrink:0}
+.exp-dates{font-size:12px;color:var(--muted)}
+.exp-dur{font-size:11px;color:var(--dim);margin-top:2px}
+.exp-highlights{
+  margin-top:12px;padding-top:12px;padding-left:14px;
+  border-top:1px solid var(--line);
+  display:flex;flex-direction:column;gap:5px;
+}
+.hl{font-size:12px;color:var(--soft);display:flex;gap:8px}
+.hl::before{content:'›';color:var(--gold);flex-shrink:0}
+.conf-row{
+  display:flex;align-items:center;gap:10px;
+  margin-top:12px;padding-left:14px;
+}
+.conf-track{flex:1;height:2px;background:var(--ink3);border-radius:1px;overflow:hidden}
+.conf-bar{height:100%;border-radius:1px;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width 0.8s}
+.conf-pct{font-size:10px;color:var(--dim);white-space:nowrap}
+
+/* ── Normalization note box ── */
+.norm-box{
+  background:var(--blue-bg);
+  border:1px solid var(--blue-border);
+  border-radius:var(--r-sm);
+  padding:12px 16px;margin-bottom:14px;
+}
+.norm-box-title{font-size:11px;font-weight:600;color:var(--blue);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.norm-box-item{font-size:12px;color:var(--muted);margin-top:3px}
+
+.issues-box{
+  background:var(--rose-bg);
+  border:1px solid rgba(251,113,133,0.2);
+  border-radius:var(--r-sm);
+  padding:12px 16px;margin-bottom:14px;
+}
+.issues-box-title{font-size:11px;font-weight:600;color:var(--rose);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.issues-box-item{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* ── Skills ── */
+.cluster-block{margin-bottom:22px}
+.cluster-hdr{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.8px;
+  color:var(--dim);margin-bottom:10px;
+}
+.cdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.skill-tags{display:flex;flex-wrap:wrap;gap:6px}
+.skill-tag{
+  padding:5px 12px;border-radius:20px;
+  font-size:12px;font-weight:500;
+  border:1px solid var(--line2);
+  background:var(--ink2);
+  display:flex;align-items:center;gap:7px;
+  transition:border-color 0.15s;
+}
+.skill-tag:hover{border-color:var(--line2)}
+.s-raw{font-size:10px;color:var(--dim)}
+.prof{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
+.p-Expert{background:var(--green-bg);color:var(--green)}
+.p-Proficient{background:var(--blue-bg);color:var(--blue)}
+.p-Familiar{background:var(--ink3);color:var(--dim)}
+
+/* ── Education ── */
+.edu-card{
+  background:var(--ink2);border:1px solid var(--line);
+  border-radius:var(--r);padding:18px 20px;margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  transition:border-color 0.2s;
+}
+.edu-card:hover{border-color:var(--line2)}
+.edu-school{
+  font-family:'Syne',sans-serif;
+  font-size:15px;font-weight:700;color:var(--white);
+}
+.edu-raw{font-size:11px;color:var(--dim);margin-top:2px}
+.edu-degree{font-size:13px;color:var(--muted);margin-top:6px}
+.edu-reason{font-size:11px;color:var(--dim);margin-top:4px;font-style:italic}
+.tier-b{font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;white-space:nowrap}
+.t-Elite{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border)}
+.t-Target{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.t-Standard{background:var(--ink3);color:var(--muted);border:1px solid var(--line2)}
+
+/* ── JSON viewer ── */
+.json-wrap{
+  background:var(--ink2);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;
+}
+.json-toolbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;border-bottom:1px solid var(--line);
+  background:var(--ink3);
+}
+.json-toolbar span{font-size:11px;color:var(--muted)}
+.copy-btn{
+  font-size:11px;padding:5px 12px;
+  background:var(--ink4);border:1px solid var(--line2);
+  border-radius:var(--r-sm);color:var(--text);cursor:pointer;
+  transition:all 0.15s;
+}
+.copy-btn:hover{border-color:var(--gold);color:var(--gold)}
+.json-body{
+  padding:16px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;line-height:1.8;
+  overflow-x:auto;white-space:pre;
+  color:#c9d1e0;max-height:65vh;overflow-y:auto;
+}
+.jk{color:#60a5fa}
+.js{color:#86efac}
+.jn{color:#fcd34d}
+.jb{color:#f9a8d4}
+.jnull{color:#94a3b8}
+
+/* Spinner */
+.spin{
+  width:16px;height:16px;
+  border:2px solid rgba(13,15,20,0.3);
+  border-top-color:var(--ink);
+  border-radius:50%;
+  animation:rot 0.6s linear infinite;
+  display:inline-block;
+}
+@keyframes rot{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">⚡</div>
+    ResumeIQ
+    <span class="logo-sub">AI Enrichment Platform</span>
+  </div>
+  <div class="topbar-right">
+    <span class="model-pill">llama-3.3-70b · groq</span>
+    <div class="status-pill">
+      <span class="sdot" id="sdot"></span>
+      <span id="slabel">Connecting...</span>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ── Left ── -->
+  <div class="left">
+
+    <!-- Pipeline -->
+    <div class="left-section">
+      <div class="sect-title">Processing Pipeline</div>
+      <div class="pipeline">
+        <div class="pipe-row">
+          <div class="pipe-node" id="pn1">📥</div>
+          <div class="pipe-text">
+            <div class="pipe-name" id="pm1">Ingest</div>
+            <div class="pipe-detail">Document received</div>
+          </div>
+        </div>
+        <div class="pipe-row">
+          <div class="pipe-node" id="pn2">🤖</div>
+          <div class="pipe-text">
+            <div class="pipe-name" id="pm2">LLM Extraction</div>
+            <div class="pipe-detail">Llama 3.3 · 70B</div>
+          </div>
+        </div>
+        <div class="pipe-row">
+          <div class="pipe-node" id="pn3">🏢</div>
+          <div class="pipe-text">
+            <div class="pipe-name" id="pm3">Company Normalization</div>
+            <div class="pipe-detail">Entities resolved</div>
+          </div>
+        </div>
+        <div class="pipe-row">
+          <div class="pipe-node" id="pn4">🗂️</div>
+          <div class="pipe-text">
+            <div class="pipe-name" id="pm4">Skills Taxonomy</div>
+            <div class="pipe-detail">Clusters mapped</div>
+          </div>
+        </div>
+        <div class="pipe-row">
+          <div class="pipe-node" id="pn5">🎓</div>
+          <div class="pipe-text">
+            <div class="pipe-name" id="pm5">Education Scoring</div>
+            <div class="pipe-detail">Tiers assigned</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input -->
+    <div class="left-section">
+      <div class="sect-title">Resume Input</div>
+      <div class="itabs">
+        <button class="itab active" onclick="mode('text',this)">📝 Paste Text</button>
+        <button class="itab" onclick="mode('file',this)">📎 Upload File</button>
+      </div>
+
+      <div id="textPane">
+        <textarea id="rt" placeholder="Paste any resume — messy, abbreviated, multi-column...
+
+Example:
+Sarah Chen | sarah@proton.me | SF, CA
+
+Principal ML Eng @ Goog (Mountain View) | Mar 2020–now
+TF, K8s, BigQuery — team lead 8 ppl
+
+SWE II, MSFT Azure | 2017–2020 | C#, .NET
+
+Education: MS CS Stanford 2015 | BS MIT 2013
+Skills: Python TF K8s JS React Docker AWS"></textarea>
+        <div class="demo-row">
+          <span class="demo-lbl">Demo</span>
+          <div class="chip" onclick="demo('clean')">Clean</div>
+          <div class="chip" onclick="demo('messy')">Messy / abbrev.</div>
+          <div class="chip" onclick="demo('senior')">VP / Senior</div>
+        </div>
+      </div>
+
+      <div id="filePane" style="display:none">
+        <div class="uzone" id="uz" onclick="document.getElementById('fp').click()">
+          <span class="uzone-icon">📎</span>
+          <p>Click to upload or drag & drop</p>
+          <span>PDF · DOCX · TXT</span>
+          <input type="file" id="fp" accept=".pdf,.docx,.txt" onchange="onFile(event)">
+        </div>
+        <div class="fsel" id="fsel">✓ <span id="fn">file</span></div>
+      </div>
+    </div>
+
+    <!-- Action -->
+    <div class="left-section">
+      <button class="parse-btn" id="pb" onclick="go()">
+        ⚡ Parse &amp; Enrich Resume
+      </button>
+      <div class="prog-wrap" id="pw">
+        <div style="height:12px"></div>
+        <div class="prog-track"><div class="prog-fill" id="pf"></div></div>
+        <div class="prog-msg" id="pm">Starting...</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Right ── -->
+  <div class="right">
+
+    <div class="empty" id="emptyState">
+      <div class="empty-graphic">📋</div>
+      <h3>No resume parsed yet</h3>
+      <p>Paste resume text or upload a file on the left, then hit Parse.</p>
+      <div class="empty-hints">
+        <span class="hint-chip">Company normalization</span>
+        <span class="hint-chip">Skills taxonomy</span>
+        <span class="hint-chip">Education tiers</span>
+        <span class="hint-chip">Structured JSON output</span>
+      </div>
+    </div>
+
+    <div id="res" style="display:none">
+      <div class="cand-header" id="ch"></div>
+      <div class="metrics-grid" id="mg"></div>
+
+      <div class="tabs-wrap">
+        <button class="tab-btn active" onclick="tab('experience',this)">
+          <span class="tab-dot" style="background:var(--gold)"></span>Experience
+        </button>
+        <button class="tab-btn" onclick="tab('skills',this)">
+          <span class="tab-dot" style="background:var(--teal)"></span>Skills
+        </button>
+        <button class="tab-btn" onclick="tab('education',this)">
+          <span class="tab-dot" style="background:var(--violet)"></span>Education
+        </button>
+        <button class="tab-btn" onclick="tab('json',this)">
+          <span class="tab-dot" style="background:var(--dim)"></span>JSON
+        </button>
+      </div>
+
+      <div id="tc-experience" class="tab-content show"></div>
+      <div id="tc-skills" class="tab-content"></div>
+      <div id="tc-education" class="tab-content"></div>
+      <div id="tc-json" class="tab-content"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const BASE = 'http://localhost:8000';
+let selFile = null;
+
+const DEMOS = {
+clean:`John Smith
+john.smith@gmail.com | +1-555-0100 | New York, NY | linkedin.com/in/jsmith
+
+EXPERIENCE
+
+Senior Software Engineer — Google LLC
+January 2021 – Present
+- Built distributed ML serving infrastructure handling 1B+ QPS
+- Led migration of legacy monolith to Kubernetes on GCP
+- Technologies: Python, Go, Kubernetes, TensorFlow, BigQuery
+
+Software Engineer — Amazon Web Services
+June 2018 – December 2020
+- Developed S3 storage APIs used by 100,000+ enterprise customers
+- Reduced deployment time by 60% with CI/CD automation
+
+Junior Engineer — Shopify
+Aug 2016 – May 2018
+- Full-stack Ruby on Rails and React development
+- Payments team, third-party API integrations
+
+EDUCATION
+B.S. Computer Science — MIT, 2016
+
+SKILLS
+Python, Go, Ruby, Java, React, JavaScript, TypeScript, Kubernetes, Docker,
+TensorFlow, BigQuery, PostgreSQL, Redis, AWS, GCP, CI/CD, gRPC`,
+
+messy:`sarah.chen@proton.me  Sarah Chen  SF CA
+
+WORK
+
+Principal ML Eng | Goog (Mountain View) | Mar 2020 – now
+built recommendation systems 500M+ users
+TF, BigQuery, K8s, GCP, team lead 8 ppl
+
+SWE II, MSFT Azure | 2017 – 2020
+C#, .NET, azure sdks, rest apis, perf optimization -40% latency
+
+Junior Dev @ startup "Nimbus Analytics" (acquired by Salesforce 2019) | 2015-17
+React frontend + Node backend, PG, Redis. Agile/Scrum.
+
+SKILLS: Python TF PyTorch JS TS React Node C# SQL NoSQL Docker K8s AWS GCP Azure Spark dbt
+
+EDUCATION
+MS CS — Stanford Univ | 2015
+BS CS+Math — MIT | 2013`,
+
+senior:`MICHAEL RODRIGUEZ
+m.rodriguez@email.com  |  Austin, TX
+
+VP of Engineering — Stripe, Inc.
+2022 – Present
+Scaled engineering org from 40 to 120 engineers.
+Payments infrastructure processing $500B/year.
+Stack: Rust, Python, Java, Postgres, Kafka, AWS
+
+Director of Engineering — Twitter (now X Corp)
+2019 – 2022
+Led Ads infrastructure team of 35 engineers.
+30% revenue increase via ML-driven bidding.
+Python, Scala, Hadoop, Kafka, GCP
+
+Senior Staff Engineer — Lyft
+2016 – 2019
+Core platform team. Microservices, gRPC, Go, Kubernetes.
+
+Software Engineer — RideFlow (acquired by Lyft 2016)
+2014 – 2016
+Ruby on Rails, React, Postgres, Heroku.
+
+EDUCATION
+M.B.A. — Harvard Business School, 2014
+B.S. EE & CS — UC Berkeley, 2012
+
+SKILLS
+Python, Rust, Java, Scala, Go, Ruby on Rails, React, TypeScript, PostgreSQL,
+Kafka, Hadoop, Kubernetes, AWS, GCP, gRPC, Redis, Terraform, System Design`
+};
+
+async function checkHealth(){
+  try{
+    const r=await fetch(`${BASE}/health`);
+    const d=await r.json();
+    const dot=document.getElementById('sdot'),lbl=document.getElementById('slabel');
+    if(d.status==='ok'&&d.api_key_set){dot.className='sdot live';lbl.textContent='API live'}
+    else{lbl.textContent=d.api_key_set?'Backend error':'API key missing';lbl.style.color='var(--rose)'}
+  }catch{
+    document.getElementById('slabel').textContent='Backend offline';
+    document.getElementById('slabel').style.color='var(--rose)';
+  }
+}
+
+function mode(m,btn){
+  document.querySelectorAll('.itab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('textPane').style.display=m==='text'?'block':'none';
+  document.getElementById('filePane').style.display=m==='file'?'block':'none';
+}
+
+function demo(k){document.getElementById('rt').value=DEMOS[k]}
+
+function onFile(e){
+  selFile=e.target.files[0];
+  if(selFile){document.getElementById('fn').textContent=selFile.name;document.getElementById('fsel').style.display='flex'}
+}
+
+const uz=document.getElementById('uz');
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('over')});
+uz.addEventListener('dragleave',()=>uz.classList.remove('over'));
+uz.addEventListener('drop',e=>{
+  e.preventDefault();uz.classList.remove('over');
+  const f=e.dataTransfer.files[0];
+  if(f){selFile=f;document.getElementById('fn').textContent=f.name;document.getElementById('fsel').style.display='flex'}
+});
+
+function tab(name,btn){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('show'));
+  document.getElementById('tc-'+name).classList.add('show');
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+let pTimer=null;
+function pipe(steps){
+  let i=0;
+  for(let s=1;s<=5;s++){
+    document.getElementById('pn'+s).className='pipe-node';
+    document.getElementById('pm'+s).className='pipe-name';
+  }
+  document.getElementById('pf').style.width='0%';
+  function next(){
+    if(i>=steps.length)return;
+    const[msg,pct,step]=steps[i];
+    document.getElementById('pm').textContent=msg;
+    document.getElementById('pf').style.width=pct+'%';
+    if(step){
+      for(let s=1;s<step;s++){
+        document.getElementById('pn'+s).className='pipe-node done';
+        document.getElementById('pm'+s).className='pipe-name done';
+      }
+      document.getElementById('pn'+step).className='pipe-node active';
+      document.getElementById('pm'+step).className='pipe-name active';
+    }
+    i++;
+    if(i<steps.length)pTimer=setTimeout(next,700);
+  }
+  next();
+}
+
+async function go(){
+  const isFile=document.getElementById('filePane').style.display!=='none';
+  const txt=document.getElementById('rt').value.trim();
+  if(!isFile&&!txt){alert('Paste resume text or upload a file first.');return}
+  if(isFile&&!selFile){alert('Select a PDF, DOCX or TXT file.');return}
+
+  const btn=document.getElementById('pb');
+  btn.disabled=true;
+  btn.innerHTML='<div class="spin"></div>&nbsp; Analyzing...';
+  document.getElementById('pw').style.display='block';
+  document.getElementById('res').style.display='none';
+  document.getElementById('emptyState').style.display='none';
+
+  pipe([
+    ['Ingesting document...',10,1],
+    ['Running LLM extraction (Llama 3.3 70B)...',30,2],
+    ['Normalizing company entities...',55,3],
+    ['Mapping skills taxonomy...',75,4],
+    ['Scoring education tiers...',90,5],
+  ]);
+
+  try{
+    let result;
+    if(isFile&&selFile){
+      const fd=new FormData();fd.append('file',selFile);
+      const r=await fetch(`${BASE}/parse/file`,{method:'POST',body:fd});
+      if(!r.ok){const e=await r.json();throw new Error(e.detail||r.statusText)}
+      result=await r.json();
+    }else{
+      const r=await fetch(`${BASE}/parse/text`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:txt})});
+      if(!r.ok){const e=await r.json();throw new Error(e.detail||r.statusText)}
+      result=await r.json();
+    }
+    clearTimeout(pTimer);
+    document.getElementById('pf').style.width='100%';
+    document.getElementById('pm').textContent='Complete ✓';
+    for(let s=1;s<=5;s++){
+      document.getElementById('pn'+s).className='pipe-node done';
+      document.getElementById('pm'+s).className='pipe-name done';
+    }
+    setTimeout(()=>render(result),300);
+  }catch(err){
+    document.getElementById('pm').textContent='Error: '+err.message;
+    document.getElementById('pm').style.color='var(--rose)';
+    document.getElementById('emptyState').style.display='flex';
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='⚡ Parse &amp; Enrich Resume';
+  }
+}
+
+function render(d){
+  const C=d.candidate||{},E=d.experience||[],S=d.skills||[],U=d.education||[],M=d.extraction_meta||{};
+
+  // Candidate header
+  const init=(C.name||'??').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('ch').innerHTML=`
+    <div class="avatar">${init}</div>
+    <div style="flex:1">
+      <div class="cand-name">${C.name||'Unknown'}</div>
+      <div class="cand-meta">${[C.email,C.phone,C.location].filter(Boolean).join(' · ')}</div>
+      <div class="cand-tags">
+        <span class="ctag ctag-level">${M.career_level||'Unknown level'}</span>
+        <span class="ctag ctag-conf">⚡ ${Math.round((M.confidence_overall||0)*100)}% confidence</span>
+        <span class="ctag ctag-model">llama-3.3-70b · groq</span>
+      </div>
+    </div>`;
+
+  // Metrics
+  const MCOLS=['var(--gold)','var(--teal)','var(--violet)','var(--blue)'];
+  const MV=[E.length,S.length,+(M.total_years_experience||0).toFixed(1),U.length];
+  const ML=['Roles extracted','Skills mapped','Years exp.','Education'];
+  const MS=['Employment history','Taxonomy clustered','Computed from roles',`${U.filter(u=>u.tier==='Elite').length} Elite tier`];
+  document.getElementById('mg').innerHTML=MV.map((v,i)=>`
+    <div class="metric">
+      <div class="metric-accent" style="background:${MCOLS[i]}"></div>
+      <div class="metric-val" style="color:${MCOLS[i]}">${v}</div>
+      <div class="metric-lbl">${ML[i]}</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:3px">${MS[i]}</div>
+    </div>`).join('');
+
+  // ── Experience tab ──
+  const normNotes=M.company_normalization_notes?.length
+    ?`<div class="norm-box"><div class="norm-box-title">🏢 Company normalizations</div>${M.company_normalization_notes.map(n=>`<div class="norm-box-item">· ${n}</div>`).join('')}</div>`:'';
+  const issues=M.parsing_issues?.length
+    ?`<div class="issues-box"><div class="issues-box-title">⚠ Parsing notes</div>${M.parsing_issues.map(n=>`<div class="issues-box-item">· ${n}</div>`).join('')}</div>`:'';
+  document.getElementById('tc-experience').innerHTML=normNotes+issues+E.map(e=>`
+    <div class="exp-card">
+      <div class="exp-card-accent"></div>
+      <div class="exp-top">
+        <div>
+          <div class="exp-title">${e.title||'—'}</div>
+          <div class="exp-company-row">
+            🏢 ${e.company_raw||'—'}
+            ${e.company_normalized&&e.company_normalized!==e.company_raw?`<span class="norm-tag">→ ${e.company_normalized}</span>`:''}
+            ${e.is_acquired?`<span class="acq-tag">Acquired${e.acquired_by?' by '+e.acquired_by:''}</span>`:''}
+          </div>
+        </div>
+        <div class="exp-date-col">
+          <div class="exp-dates">${e.start_date||'?'} – ${e.end_date||'?'}</div>
+          ${e.duration_months?`<div class="exp-dur">${(e.duration_months/12).toFixed(1)} yrs</div>`:''}
+        </div>
+      </div>
+      <div class="exp-sector">${[e.industry,e.naics_category].filter(Boolean).join(' · ')}</div>
+      ${e.highlights?.length?`<div class="exp-highlights">${e.highlights.map(h=>`<div class="hl">${h}</div>`).join('')}</div>`:''}
+      <div class="conf-row">
+        <span class="conf-pct">Confidence</span>
+        <div class="conf-track"><div class="conf-bar" style="width:${Math.round((e.confidence||0.8)*100)}%"></div></div>
+        <span class="conf-pct">${Math.round((e.confidence||0.8)*100)}%</span>
+      </div>
+    </div>`).join('');
+
+  // ── Skills tab ──
+  const CC={'Frontend':'#60a5fa','Backend':'#4ade80','AI/ML':'#a78bfa','DevOps':'#e8c547','Data':'#fb7185','Mobile':'#2dd4bf','Other':'#4a5470'};
+  const clusters={};
+  S.forEach(s=>{const c=s.cluster||'Other';if(!clusters[c])clusters[c]=[];clusters[c].push(s)});
+  document.getElementById('tc-skills').innerHTML=Object.entries(clusters).map(([c,items])=>`
+    <div class="cluster-block">
+      <div class="cluster-hdr">
+        <div class="cdot" style="background:${CC[c]||'#4a5470'}"></div>
+        ${c} <span style="color:var(--dim);font-weight:400;text-transform:none;letter-spacing:0">(${items.length})</span>
+      </div>
+      <div class="skill-tags">
+        ${items.map(s=>`
+          <div class="skill-tag">
+            ${s.name}
+            ${s.raw&&s.raw!==s.name?`<span class="s-raw">← ${s.raw}</span>`:''}
+            ${s.proficiency_inference?`<span class="prof p-${s.proficiency_inference}">${s.proficiency_inference}</span>`:''}
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+
+  // ── Education tab ──
+  document.getElementById('tc-education').innerHTML=U.map(e=>`
+    <div class="edu-card">
+      <div>
+        <div class="edu-school">${e.school_normalized||e.school_raw}</div>
+        ${e.school_normalized&&e.school_normalized!==e.school_raw?`<div class="edu-raw">raw: "${e.school_raw}"</div>`:''}
+        <div class="edu-degree">${[e.degree,e.field,e.year_end].filter(Boolean).join(' · ')}</div>
+        ${e.tier_reason?`<div class="edu-reason">${e.tier_reason}</div>`:''}
+      </div>
+      <span class="tier-b t-${e.tier||'Standard'}">${e.tier||'Standard'}</span>
+    </div>`).join('');
+
+  // ── JSON tab ──
+  const jStr=JSON.stringify(d,null,2);
+  const jHtml=jStr
+    .replace(/("[\w_]+")\s*:/g,'<span class="jk">$1</span>:')
+    .replace(/:\s*("(?:[^"\\]|\\.)*")/g,': <span class="js">$1</span>')
+    .replace(/:\s*(\d+\.?\d*)/g,': <span class="jn">$1</span>')
+    .replace(/:\s*(true|false)/g,': <span class="jb">$1</span>')
+    .replace(/:\s*(null)/g,': <span class="jnull">$1</span>');
+  document.getElementById('tc-json').innerHTML=`
+    <div class="json-wrap">
+      <div class="json-toolbar">
+        <span>Structured output · ${(JSON.stringify(d).length/1024).toFixed(1)} KB</span>
+        <button class="copy-btn" onclick="cpJSON()">Copy JSON</button>
+      </div>
+      <div class="json-body">${jHtml}</div>
+    </div>`;
+  window._J=d;
+
+  document.getElementById('res').style.display='block';
+  document.getElementById('emptyState').style.display='none';
+}
+
+function cpJSON(){navigator.clipboard.writeText(JSON.stringify(window._J,null,2))}
+checkHealth();
+</script>
+</body>
+</html>
